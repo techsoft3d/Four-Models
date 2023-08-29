@@ -43,3 +43,69 @@ async function startViewer() {
 
 }
 
+async function fetchVersionNumber() {
+        const conversionServiceURI = "https://csapi.techsoft3d.com";
+
+        let res = await fetch(conversionServiceURI + '/api/hcVersion');
+        var data = await res.json();
+        versionNumer = data;
+        
+        return data
+
+}
+
+
+
+async function initializeViewer() {
+    const models = [
+        "master",
+        "proe25",
+        "proe",
+        "moto",
+        "vimek",
+        "microengine",
+      ];
+  
+      var result = await startViewer()
+      viewer = result[0]
+      var data = result[1]
+  
+      viewer.setCallbacks({
+        sceneReady: function (camera) {
+          viewer
+            .getSelectionManager()
+            .setHighlightLineElementSelection(false);
+          viewer
+            .getSelectionManager()
+            .setHighlightFaceElementSelection(false);
+          viewer.getSelectionManager().setSelectParentIfSelected(false);
+          viewer.getView().setAmbientOcclusionEnabled(true);
+          viewer.getView().setAmbientOcclusionRadius(0.02);
+          viewer.getModel().setEnableAutomaticUnitScaling(false);
+          viewer.setClientTimeout(60, 60);
+          viewer
+            .getView()
+            .setCamera(Communicator.Camera.construct(CAMERAS[4]));
+        },
+        modelStructureReady: function () {
+          $(".dropdown").css("display", "inline-block");
+          $(".spinner").css("display", "none");
+        },
+      });
+  
+      const uiConfig = {
+        containerId: "content",
+        screenConfiguration: Sample.screenConfiguration,
+      };
+      const ui = new Communicator.Ui.Desktop.DesktopUi(viewer, uiConfig);
+    
+      window.onresize = function () {
+        viewer.resizeCanvas();
+      };
+  
+      if (data.collection_id) {
+        window.onbeforeunload = function () {
+          $.get("/api/delete_collection?collection=" + [data.collection_id]);
+        };
+      }
+}
