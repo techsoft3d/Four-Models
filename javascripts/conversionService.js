@@ -1,36 +1,19 @@
 modelUIDs = [
-        "2b3a2eb9-42de-4b16-936d-b41822be6f4a", //microengine 
-        "707947a9-7df8-4720-bafd-e2d9b3a0d020", //vimek
-        "6d972cea-18e2-486c-b1f5-1869bcc644d9", // proe
-        "40f4677c-19fc-4978-b80d-2201346c58f5", //pre25
-        "a35ee3a0-62ba-43bf-a449-fd563ee3b737" //moto
+        "b1891f18-8ea9-4b7d-8d7a-0dfa52dc4458", //microengine 
+        "6bc2e25a-618a-4c7d-b6ee-1573a051ac03", //vimek
+        "fe9c35fe-aea9-4e6e-be39-23806cab936e", // proe
+        "e19bf460-424b-4c5b-af7e-5657f27cecdd", //pre25
+        "4709d28e-db9e-4cdc-9ee8-18e0db5615c6" //moto
 ]
 
 
 async function startViewer() {
-        const conversionServiceURI = "https://csapi.techsoft3d.com";
-
         var viewer;
-
-        let res = await fetch(conversionServiceURI + '/api/streamingSession');
-        var data = await res.json();
-
-        var endpointUriBeginning = 'ws://';
-
-        if(conversionServiceURI.substring(0, 5).includes("https")){
-                endpointUriBeginning = 'wss://'
-        }
-
-        await fetch(conversionServiceURI + '/api/enableStreamAccess/' + data.sessionid, { method: 'put', headers: { 'items': JSON.stringify(modelUIDs) } });
-
-       
-        await fetch(conversionServiceURI + '/api/enableStreamAccess/' +  data.sessionid, { method: 'put', headers: { 'CS-API-Arg': JSON.stringify({subDirectory:"moto_parts" }), 'items': JSON.stringify(["0f248a5d-2366-44e3-9c48-2b64b7264d2e"]) } });
-   
-     
-
+        let sessioninfo = await caasClient.getStreamingSession();
+        await caasClient.enableStreamAccess(sessioninfo.sessionid, modelUIDs);
         viewer = new Communicator.WebViewer({
                 containerId: "viewerContainer",
-                endpointUri: endpointUriBeginning + data.serverurl + ":" + data.port + '?token=' + data.sessionid,
+                endpointUri: sessioninfo.endpointUri,
                 model: "_empty",
                 boundingPreviewMode: Communicator.BoundingPreviewMode.None,
                 enginePath: "https://cdn.jsdelivr.net/gh/techsoft3d/hoops-web-viewer",
@@ -39,20 +22,16 @@ async function startViewer() {
 
         viewer.start();
 
-        return [viewer,data]
+        return viewer //[viewer,data]
 
 }
 
 async function fetchVersionNumber() {
-        const conversionServiceURI = "https://csapi.techsoft3d.com";
-
-        let res = await fetch(conversionServiceURI + '/api/hcVersion');
-        var data = await res.json();
-        versionNumer = data;
-        
-        return data
-
+  let data = await caasClient.getHCVersion();
+  versionNumer = data;        
+  return data
 }
+
 
 
 
@@ -67,8 +46,7 @@ async function initializeViewer() {
       ];
   
       var result = await startViewer()
-      viewer = result[0]
-      var data = result[1]
+      viewer = result 
   
       viewer.setCallbacks({
         sceneReady: function (camera) {
@@ -103,9 +81,4 @@ async function initializeViewer() {
         viewer.resizeCanvas();
       };
   
-      if (data.collection_id) {
-        window.onbeforeunload = function () {
-          $.get("/api/delete_collection?collection=" + [data.collection_id]);
-        };
-      }
 }
