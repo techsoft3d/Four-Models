@@ -1,6 +1,6 @@
 # Hoops Web Platform - Four Models Demo
 
-See this demo running live on [GitHub Pages](https://techsoft3d.github.io/Four-Models/).
+See this demo running live on [GitHub Pages](https://four-models-docker.techsoft3d.com/).
 
 ## In order to run locally
 
